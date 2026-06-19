@@ -28,28 +28,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider
-      appearance={{
-        variables: {
-          colorPrimary: "#f97316",
-          colorBackground: "#0a1628",
-          colorInputBackground: "#141f38",
-          colorInputText: "#f1f5f9",
-          colorText: "#f1f5f9",
-        },
-        elements: {
-          card: "border border-white/10 shadow-2xl",
-          formButtonPrimary:
-            "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700",
-        },
-      }}
-    >
-      <html lang="en">
-        <body className="min-h-screen bg-navy antialiased">
+    <html lang="en">
+      <body className="min-h-screen bg-navy antialiased">
+        <ClerkProvider
+          appearance={{
+            variables: {
+              colorPrimary: "#f97316",
+              colorBackground: "#0a1628",
+              colorInputBackground: "#141f38",
+              colorInputText: "#f1f5f9",
+              colorText: "#f1f5f9",
+            },
+            elements: {
+              card: "border border-white/10 shadow-2xl",
+              formButtonPrimary:
+                "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700",
+            },
+          }}
+        >
           <Navbar />
           <main className="pt-16">{children}</main>
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }

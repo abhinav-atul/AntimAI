@@ -7,7 +7,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { cases, tasks } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { getGeminiClient } from "@/lib/gemini";
+import { generateOpenRouterCompletion } from "@/lib/openrouter";
 import {
   CHECKLIST_SYSTEM_PROMPT,
   buildChecklistUserPrompt,
@@ -50,13 +50,7 @@ export async function POST(req: NextRequest) {
       return option ? option.label : code;
     });
 
-    // Call Gemini API
-    const client = getGeminiClient();
-    const model = client.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      systemInstruction: CHECKLIST_SYSTEM_PROMPT,
-    });
-    
+    // Call OpenRouter API
     const userPrompt = buildChecklistUserPrompt(
       caseRecord.deceasedName,
       caseRecord.deceasedDod,
@@ -71,8 +65,11 @@ export async function POST(req: NextRequest) {
     while (attempts < maxAttempts) {
       attempts++;
       try {
-        const result = await model.generateContent(userPrompt);
-        const responseText = result.response.text();
+        const responseText = await generateOpenRouterCompletion(
+          CHECKLIST_SYSTEM_PROMPT,
+          userPrompt,
+          "openai/gpt-oss-120b:free"
+        );
 
         // Try to parse JSON — handle potential markdown wrapping
         let jsonStr = responseText.trim();

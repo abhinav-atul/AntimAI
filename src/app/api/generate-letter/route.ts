@@ -7,7 +7,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { tasks, cases } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getGeminiClient } from "@/lib/gemini";
+import { generateOpenRouterCompletion } from "@/lib/openrouter";
 import { LETTER_SYSTEM_PROMPT, buildLetterUserPrompt } from "@/lib/prompts";
 import { generateLetterPdf } from "@/lib/pdf";
 
@@ -48,13 +48,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    // Call Gemini to generate letter text
-    const client = getGeminiClient();
-    const model = client.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      systemInstruction: LETTER_SYSTEM_PROMPT,
-    });
-
+    // Call OpenRouter to generate letter text
     const userPrompt = buildLetterUserPrompt(
       task.institution,
       task.title,
@@ -67,8 +61,20 @@ export async function POST(req: NextRequest) {
       task.documentsRequiredJson as string[]
     );
 
-    const result = await model.generateContent(userPrompt);
-    const letterText = result.response.text();
+    let letterText;
+    try {
+      letterText = await generateOpenRouterCompletion(
+        LETTER_SYSTEM_PROMPT,
+        userPrompt,
+        "openai/gpt-oss-120b:free"
+      );
+    } catch (primaryError) {
+      console.warn("OpenRouter API failed:", primaryError);
+      return NextResponse.json(
+        { error: "Failed to generate letter text via OpenRouter" },
+        { status: 500 }
+      );
+    }
 
     if (!letterText) {
       return NextResponse.json(
